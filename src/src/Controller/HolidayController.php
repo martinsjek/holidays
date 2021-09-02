@@ -17,6 +17,7 @@ use Symfony\Contracts\HttpClient\HttpClientInterface;
 use Symfony\Component\Validator\Constraints\Collection;
 use Symfony\Component\Validator\Constraints\Length;
 use Symfony\Component\Validator\Constraints\NotBlank;
+use Symfony\Component\Validator\Constraints\Type;
 
 class HolidayController extends AbstractController
 {
@@ -59,7 +60,7 @@ class HolidayController extends AbstractController
 
         $constraints = new Collection([
             'country' => [new Length(['min' => 3, 'max' => 3]), new NotBlank],
-            'year' => [new Length(['min' => 4, 'max' => 4]), new notBlank]
+            'year' => [new Length(['min' => 4, 'max' => 4]), new Type('integer'), new notBlank]
         ]);
 
         $errors = $validator->validate($input, $constraints);
