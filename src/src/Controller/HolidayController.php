@@ -94,8 +94,9 @@ class HolidayController extends AbstractController
             'countries' => $countries,
             'data' => $data,
             'country' => strtolower($country),
+            'year' => $year,
             'totalHolidays' => $totalHolidays,
-            'year' => $year
+            'statusToday' => $this->getStatusToday($country),
         ]);
     }
 
@@ -138,5 +139,71 @@ class HolidayController extends AbstractController
         }
 
         return $holidaysGroupedByMonth;
+    }
+
+    /**
+     * @throws TransportExceptionInterface
+     * @throws ServerExceptionInterface
+     * @throws RedirectionExceptionInterface
+     * @throws DecodingExceptionInterface
+     * @throws ClientExceptionInterface
+     */
+    private function getStatusToday($country): string
+    {
+        if ($this->isWorkDay($country)) {
+            return 'Work day';
+        }
+
+        if ($this->isPublicHoliday($country)) {
+            return 'Public Holiday';
+        }
+
+        return 'Free day';
+    }
+
+    /**
+     * @param string $country
+     * @return bool
+     * @throws ClientExceptionInterface
+     * @throws DecodingExceptionInterface
+     * @throws RedirectionExceptionInterface
+     * @throws ServerExceptionInterface
+     * @throws TransportExceptionInterface
+     */
+    private function isPublicHoliday(string $country): bool
+    {
+        $date = date('d-m-Y');
+
+        $response = $this->client->request(
+            'GET',
+            "https://kayaposoft.com/enrico/json/v2.0?action=isPublicHoliday&date=$date&country=$country"
+        );
+
+        $responseData = $response->toArray();
+
+        return $responseData['isPublicHoliday'];
+    }
+
+    /**
+     * @param string $country
+     * @return bool
+     * @throws ClientExceptionInterface
+     * @throws DecodingExceptionInterface
+     * @throws RedirectionExceptionInterface
+     * @throws ServerExceptionInterface
+     * @throws TransportExceptionInterface
+     */
+    private function isWorkDay(string $country): bool
+    {
+        $date = date('d-m-Y');
+
+        $response = $this->client->request(
+            'GET',
+            "https://kayaposoft.com/enrico/json/v2.0/?action=isWorkDay&date=$date&country=$country"
+        );
+
+        $responseData = $response->toArray();
+
+        return $responseData['isWorkDay'];
     }
 }

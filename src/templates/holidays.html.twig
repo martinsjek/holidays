@@ -43,6 +43,12 @@
                 </form>
             </div>
 
+            {% if statusToday is defined %}
+                <div class="col-md-4 col-12 mb-3">
+                    <h2>Status today: {{ statusToday }}</h2>
+                </div>
+            {% endif %}
+
             {% if totalHolidays is defined %}
                 <div class="col-md-4 col-12 mb-3">
                     <h2>TOTAL public holidays: {{ totalHolidays }}</h2>
