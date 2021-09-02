@@ -82,6 +82,7 @@ class HolidayController extends AbstractController
             }
 
             $data = $this->formatHolidaysForYearByMonth($responseData);
+            $longestFreeDaySequence = $this->getLongestFreeDayPeriodInRow($responseData);
             $totalHolidays = count($responseData);
         } else {
             return $this->render('holidays.html.twig', [
@@ -97,6 +98,7 @@ class HolidayController extends AbstractController
             'year' => $year,
             'totalHolidays' => $totalHolidays,
             'statusToday' => $this->getStatusToday($country),
+            'longestFreeDaySequence' => $longestFreeDaySequence
         ]);
     }
 
@@ -205,5 +207,84 @@ class HolidayController extends AbstractController
         $responseData = $response->toArray();
 
         return $responseData['isWorkDay'];
+    }
+
+    private function getLongestFreeDayPeriodInRow($data): array
+    {
+        //format API response to valid dates
+        $dates = [];
+        foreach ($data as $item) {
+            $dateArray = $item['date'];
+            $dateString = "{$dateArray['day']}-{$dateArray['month']}-{$dateArray['year']}";
+            $dates[] = DateTime::createFromFormat('j-n-Y', $dateString)->format('d-m-Y');
+        }
+
+        //add weekends to dates
+        $datesWithWeekends = [];
+        foreach($dates as $item){
+            $datesWithWeekends[] = $item;
+
+            //if this date is friday add 2 days ir saturday add one day
+            switch(date("w", strtotime($item))){
+                case 5:
+                    $saturday = date("d-m-Y", strtotime("$item +1 day"));
+                    $sunday = date("d-m-Y", strtotime("$item +2 day"));
+                    if(!in_array($saturday, $dates, true)){
+                        $datesWithWeekends[] = $saturday;
+                    }
+
+                    if(!in_array($sunday, $dates, true)){
+                        $datesWithWeekends[] = $sunday;
+                    }
+                    break;
+                case 6:
+                    $sunday = date("d-m-Y", strtotime("$item +1 day"));
+
+                    if(!in_array($sunday, $dates, true)){
+                        $datesWithWeekends[] = $sunday;
+                    }
+                    break;
+            }
+        }
+
+
+        //list sequential dates in arrays
+        $grouped = [];
+        $i = 0;
+        $lastDate = null;
+        $result = [];
+        foreach ($datesWithWeekends as $date) {
+            if ($date !== date("d-m-Y", strtotime("$lastDate +1 day"))) {
+                ++$i;
+            }
+            $grouped[$i][] = $lastDate = $date;
+        }
+
+        foreach ($grouped as $group) {
+            $result[] = $group;
+        }
+
+        //find longest free day sequences
+        $lastLongest = 0;
+        $longestPeriodKeys = [];
+        foreach ($result as $key => $item){
+            $periodLength = count($item);
+            if($periodLength > $lastLongest){
+                $lastLongest = $periodLength;
+                $longestPeriodKeys = [$key];
+            }
+
+            if(($periodLength === $lastLongest) && !in_array($key, $longestPeriodKeys, true)) {
+                $longestPeriodKeys[] = $key;
+            }
+        }
+
+        //return longest free day periods
+        $returnData = [];
+        foreach ($longestPeriodKeys as $key){
+            $returnData[] = $result[$key];
+        }
+
+        return $returnData;
     }
 }

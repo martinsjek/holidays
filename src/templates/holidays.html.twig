@@ -57,6 +57,18 @@
 
         </div>
 
+        {% if longestFreeDaySequence is defined and longestFreeDaySequence %}
+            <div class="row mt-5">
+                <div class="col-12">
+                    <h3>Longest free days</h3>
+                    <p>count {{ longestFreeDaySequence[0]|length }}</p>
+                    {% for dates in longestFreeDaySequence %}
+                        <p>{{ dates|first }} - {{ dates|last }}</p>
+                    {% endfor %}
+                </div>
+            </div>
+        {% endif %}
+
         {% if data is defined and data %}
             <div class="row mt-5">
                 <h3 class="col-12">DATA</h3>
