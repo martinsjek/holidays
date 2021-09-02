@@ -82,6 +82,7 @@ class HolidayController extends AbstractController
             }
 
             $data = $this->formatHolidaysForYearByMonth($responseData);
+            $totalHolidays = count($responseData);
         } else {
             return $this->render('holidays.html.twig', [
                 'countries' => $countries,
@@ -93,6 +94,7 @@ class HolidayController extends AbstractController
             'countries' => $countries,
             'data' => $data,
             'country' => strtolower($country),
+            'totalHolidays' => $totalHolidays,
             'year' => $year
         ]);
     }
