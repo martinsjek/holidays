@@ -1,3 +1,8 @@
-#index:
-#    path: /
-#    controller: App\Controller\DefaultController::index
+index:
+  path: /
+  methods: GET
+  controller: App\Controller\HolidayController::index
+holiday-search:
+  path: /holiday-search
+  methods: GET
+  controller: App\Controller\HolidayController::search

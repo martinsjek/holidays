@@ -1,0 +1,67 @@
+{% extends "base.html.twig" %}
+
+{% block body %}
+    <div class="container">
+        {% if apiError is defined %}
+            <div class="p-3 bg-danger text-white">{{ apiError }}</div>
+        {% endif %}
+        <div class="row mt-5">
+            <div class="col-md-4 col-12 mb-3">
+                <form action="{{ path('holiday-search') }}" method="GET">
+                    <div>
+                        <label for="countries">Country</label>
+                        <select name="country" id="countries" class="form-control">
+                            {% for key, item in countries %}
+                                <option value="{{ key }}" {{ country is defined and key|lower is same as(country) ? 'selected' : '' }}>{{ item }}</option>
+                            {% endfor %}
+                        </select>
+                        {% if errors is defined %}
+                            <div class="errors text-danger mt-1">
+                                {% for error in errors %}
+                                    {% if error.propertyPath == '[country]' %}
+                                        {{ error.message }}
+                                    {% endif %}
+                                {% endfor %}
+                            </div>
+                        {% endif %}
+                    </div>
+                    <div>
+                        <label for="year">Year</label>
+                        <input type="number" id="year" name="year" value="{{ year is defined ? year : '' }}"
+                               class="form-control">
+                        {% if errors is defined %}
+                            <div class="errors text-danger mt-1">
+                                {% for error in errors %}
+                                    {% if error.propertyPath == '[year]' %}
+                                        {{ error.message }}
+                                    {% endif %}
+                                {% endfor %}
+                            </div>
+                        {% endif %}
+                    </div>
+                    <button type="submit" class="btn btn-primary">Submit</button>
+                </form>
+            </div>
+        </div>
+
+        {% if data is defined and data %}
+            <div class="row mt-5">
+                <h3 class="col-12">DATA</h3>
+                {% for month, item in data %}
+                    <div class="col-md-3 col-sm-4 col-12 mb-4">
+                        <h4>{{ month }}</h4>
+                        {% for i in item %}
+                            <div>
+                                <div class="mb-4 border p-2">
+                                    <p>Day: {{ i.day }}</p>
+                                    <p>day of week: {{ i.dayOfWeek }}</p>
+                                    <p>Text: {{ i.text }}</p>
+                                </div>
+                            </div>
+                        {% endfor %}
+                    </div>
+                {% endfor %}
+            </div>
+        {% endif %}
+    </div>
+{% endblock %}
