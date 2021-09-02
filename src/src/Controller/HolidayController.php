@@ -2,6 +2,7 @@
 
 namespace App\Controller;
 
+use App\Entity\Holiday;
 use DateTime;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
@@ -66,19 +67,41 @@ class HolidayController extends AbstractController
         $countries = $this->getSupportedCountries();
 
         if ($errors->count() <= 0) {
-            $response = $this->client->request(
-                'GET',
-                "https://kayaposoft.com/enrico/json/v2.0?action=getHolidaysForYear&year=$year&country=$country&holidayType=public_holiday"
-            );
-
-            $responseData = $response->toArray();
-
-            //check if we get an error from API
-            if (isset($responseData['error'])) {
-                return $this->render('holidays.html.twig', [
-                    'countries' => $countries,
-                    'apiError' => $responseData['error']
+            //check if data exists in database, if not then save data from API
+            $existingDataFromDatabase = $this->getDoctrine()
+                ->getRepository(Holiday::class)
+                ->findOneBy([
+                    'country' => $country,
+                    'year' => $year,
                 ]);
+
+            if($existingDataFromDatabase){
+                $responseData = $existingDataFromDatabase->getData();
+            }else{
+                $response = $this->client->request(
+                    'GET',
+                    "https://kayaposoft.com/enrico/json/v2.0?action=getHolidaysForYear&year=$year&country=$country&holidayType=public_holiday"
+                );
+
+                $responseData = $response->toArray();
+
+                //check if we get an error from API
+                if(isset($responseData['error'])){
+                    return $this->render('holidays.html.twig', [
+                        'countries' => $countries,
+                        'apiError' => $responseData['error'],
+                    ]);
+                }
+
+                $entityManager = $this->getDoctrine()->getManager();
+
+                $holiday = new Holiday();
+                $holiday->setCountry($country);
+                $holiday->setYear($year);
+                $holiday->setData($responseData);
+
+                $entityManager->persist($holiday);
+                $entityManager->flush();
             }
 
             $data = $this->formatHolidaysForYearByMonth($responseData);
